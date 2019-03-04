@@ -87,6 +87,12 @@ Model Info:
     - should plot these data and look at the per-capita rate
     - look into using something like `numchases | trials(group_size)`, like in the aggregated binomial model of % food eaten, this would be instead of a per-capita numchase value
 4) Try to calculate repeatability value for within-group in chase and food eaten models, maybe latency too.
+5) Want to try and look at **conformity**, or how closely you stick to your group members. So, for a given trial and *treatment*, are you closer to the individuals **in your group** than you are to all of the other fish in your *treatment*? So this would be something like comparing within-group variance to total treatment variance? Or something like that? Need to look into multilevel modeling comparisons between group vs. global effects maybe?
+    - another way to phrase this would be: does knowing what group you're in tell you more than knowing the global value for your treatment?
+        - there has to be info out there on this, comparing group-level and global effects
+    - this is maybe a repeatability measure for a *group* instead of an *individual*, just like we'd calculate repeatability to determine personality for an individual. Look at Nakagawa 2016/17?
+    - we could calculate this for a negative binomial model
+6) ICC Stuff: look at `sjstats:::icc.brmsfit` code, also look into how to use `brms::predicted` with a single value for a predictor, ie how to use treatment = 2. Check [this link](https://github.com/paul-buerkner/brms/issues/82)
 
 # Other To-Do
 
