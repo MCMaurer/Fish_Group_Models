@@ -5,6 +5,10 @@
 .git/objects/13/cf90592ae748c08d37910fe016d7d0abd34cdb
 fit_models/.git/objects/13/cf90592ae748c08d37910fe016d7d0abd34cdb
 images/
+latency/fit_models/
+food_eaten/fit_models/
+old_stuff/fit_models/
+latency/fit_models/lat_nov_hurd_nbin_hu_fit.rds
 latency/fit_models/lat_pred_hurd_nbin_hu_fit.rds
 latency/fit_models/lat_typ_hurd_nbin_hu_fit.rds
 old_stuff/fit_models/fit_multivariate_group_size_novel_nbin_farm.rds

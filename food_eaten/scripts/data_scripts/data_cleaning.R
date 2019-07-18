@@ -58,3 +58,25 @@ d_novel$prop_eaten_novel[d_novel$prop_eaten_novel > 1] <- 1
 saveRDS(d_typical, "food_eaten/data/cleaned/typical_food_proportion_eaten_group_size.rds")
 
 saveRDS(d_novel, "food_eaten/data/cleaned/novel_food_proportion_eaten_group_size.rds")
+
+#### Joining food_eaten and chase data to look at food_eaten and aggression ####
+
+food_eaten <- readRDS("food_eaten/data/cleaned/typical_food_proportion_eaten_group_size.rds") %>% 
+  rename(group = Group, trial = Trial, tank = Tank)
+
+chases <- readRDS("chases/data/cleaned/only_half_chase_group_size.rds") %>% 
+  select(-timechases) %>% 
+  spread(key = assay, value = numchases)
+
+
+full_data <- full_join(x = food_eaten, y = chases, by = c("trial", "group", "treatment", "tank"))
+full_data <- full_data %>% 
+  select(treatment, trial, tank, group, food_eaten, food_input, activity, food, novel) %>% 
+  rename(typical_chases = food)
+
+full_data <- full_data %>% 
+  group_by(group) %>% 
+  mutate(act_chases_aggregate = sum(activity)) %>% 
+  arrange(group, trial)
+
+saveRDS(full_data, "food_eaten/data/cleaned/food_eaten_chases.rds")

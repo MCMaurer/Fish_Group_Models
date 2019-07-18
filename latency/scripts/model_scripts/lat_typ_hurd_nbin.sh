@@ -19,7 +19,7 @@
 #SBATCH --time=5-0
 
 # set the name of the job
-#SBATCH --job-name=fish_model
+#SBATCH --job-name=lat_typ_hurd_nbin
 
 # mail alerts at beginning and end
 #SBATCH --mail-type=BEGIN

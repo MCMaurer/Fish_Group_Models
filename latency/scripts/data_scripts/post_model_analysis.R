@@ -11,6 +11,7 @@ library(ggeffects)
 library(broom)
 library(ggridges)
 library(MCMsBasics)
+library(sjstats)
 
 # make a custom theme
 
@@ -59,15 +60,17 @@ effects <- effects$`treatment:trial`
 
 effects %>% 
   ggplot(aes(x=treatment, y=estimate__, color=trial)) +
+  geom_jitter(data = model_6$data, aes(x = treatment, y = latency, color = factor(trial, labels = c("trial 1", "trial 2", "trial 3"))), alpha = 0.5) +
   geom_line() +
   geom_ribbon(aes(ymin=lower__, ymax=upper__, fill = trial), color = "transparent", alpha = 0.1) +
   scale_fill_viridis_d() +
   scale_color_viridis_d() +
-  custom_minimal_theme() +
+  minimal_ggplot_theme() +
   ggtitle("marginal effects of poisson multilevel model") +
   ylab("estimated latency")
 
-ggsave("latency_novel_group_size/images/marginal_effects.jpg", width = 5, height = 5)
+
+ggsave("latency/images/marginal_effects_withpoints.jpg", width = 5, height = 5)
 
 
 # now spaghetti plots
@@ -301,11 +304,53 @@ spag %>%
 # data were transformed such that no observation of movement is recorded as a 0, with the fastest actual recorded movement is a latency of 1
 # then, a hurdle model is used to account for the 0s, which indicate no observation
 # once that "hurdle" is cleared, positive values are modeled as a negative binomial
-model_6 <- readRDS("latency_novel_group_size/fit_models/model_6_fit.rds")
+model_6 <- readRDS("old_stuff/fit_models/model_6_fit.rds")
 
+model_6$formula
+
+marginal_effects(model_6)
+
+icc_result <- icc(x = model_6, adjusted = TRUE, ppd = TRUE, typical = "median", re.form = ~(1 + treatment + trial | group_ID))
+icc_result
+
+?posterior_predict
+
+equi_test(model_6, out = "plot")
 # plot a barplot of frequency of zeroes (fish that never move) across each treatment, see if there's really any effect there
 
 model_6$data
+
+
+
+#### ICC Stuff with intercept-only model ####
+
+typ_int <- readRDS("latency/fit_models/lat_typ_int_hurd_nbin_hu_fit.rds")
+typ_hu <- readRDS("latency/fit_models/lat_typ_hurd_nbin_hu_fit.rds")
+
+marginal_effects(typ_int)
+
+icc_int_result <- icc(x = typ_int, adjusted = TRUE, ppd = TRUE, typical = "median", re.form = ~(1 | group_ID))
+icc_int_result
+
+icc_typ_hu_result <- icc(x = typ_hu, adjusted = TRUE, ppd = TRUE, typical = "median", re.form = ~(1 + treatment + trial | group_ID))
+
+icc_typ_hu_result
+
+?posterior_predict
+
+equi_test(typ_int, out = "plot")
+
+waic(model_6, typ_int)
+
+add_loo(model_6)
+
+loo(model_6, typ_int)
+
+icc_int_result
+
+icc(typ_int, ppd = T, typical = "median", re.form = ~(1|group_ID))
+
+
 
 source("figure_generating_functions.R")
 
@@ -498,6 +543,118 @@ effects %>%
   ylab("estimated latency") + xlab("group size")
 
 ggsave("latency_novel_group_size/images/latency_novel_full_data_marginal_effects.jpg")
+
+
+#### predator cue latency ####
+# estimates for hurdle are funky bc there are only ~7 individuals that never moved
+
+model <- readRDS("latency/fit_models/lat_pred_hurd_nbin_hu_fit.rds")
+
+launch_shinystan(model)
+
+ps <- posterior_summary(model) %>% unlist() %>% as.data.frame()
+ps
+
+ps2 <- ps[1:6,]
+ps2 <- ps2 %>% 
+  mutate(variable = rownames(ps2))
+ps2
+ps2 %>% 
+  filter(variable != "b_hu_Intercept") %>% 
+  ggplot(aes(y=Estimate, x = variable))+
+  geom_pointrange(aes(ymin=Q2.5, ymax=Q97.5, group=variable), size = 2/5, shape = 20) +
+  geom_hline(yintercept=0, color = "gray25", alpha = 0.25) +
+  coord_flip() +
+  minimal_ggplot_theme() +
+  ggtitle("parameter estimates for nbinom hurdle model\nwith 95% credible intervals")
+
+# making a table of the parameter values
+jpeg("latency/images/param_table.jpeg", height=200, width=600, res = 100)
+ps2 %>% 
+  select(variable, Estimate, Est.Error, Q2.5, Q97.5) %>% 
+  gridExtra::grid.table(theme = gridExtra::ttheme_minimal())
+dev.off()
+
+
+my_scores %>% 
+  filter(!is.na(score)) %>% 
+  mutate(prop = round(prop, 1)) %>% 
+  grid.table(theme = ttheme_minimal())
+dev.off()
+
+ggsave("latency/images/latency_pred_full_data_dot_parameters.jpg")
+
+preds <- posterior_samples(model, pars = ps2$variable) %>% as.tibble()
+preds <- preds %>% 
+  gather(key = "variable", value = "estimate")
+
+plot_dens <- preds %>% 
+  ggplot(aes(x=estimate, y = variable)) +
+  geom_density_ridges(fill = NA, color = "black") +
+  geom_vline(xintercept = 0, color = "black", linetype = 2)
+
+plot_dens + minimal_ggplot_theme() + ggtitle("Parameter Density Estimates")
+ggsave("latency/images/latency_pred_full_data_parameters.jpg")
+
+int_conditions <- list(
+  trial = setNames(c(1,2,3), c("trial 1", "trial 2", "trial 3")),
+  treatment = 2:8)
+int_conditions
+
+effects <- marginal_effects(model, effects = "treatment:trial", int_conditions = int_conditions)
+effects <- effects$`treatment:trial`
+
+effects %>% 
+  ggplot(aes(x=treatment, y=estimate__, color=trial)) +
+  geom_jitter(data = model$data, aes(x = treatment, y = latency, color = factor(trial, labels = c("trial 1", "trial 2", "trial 3"))), alpha = 0.5) +
+  geom_line() +
+  geom_ribbon(aes(ymin=lower__, ymax=upper__, fill = trial), color = "transparent", alpha = 0.1) +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d() +
+  minimal_ggplot_theme() +
+  ggtitle("marginal effects of hurdle nbin multilevel model") +
+  ylab("estimated latency") + xlab("group size")
+
+model$data
+
+ggsave("latency/images/latency_pred_full_data_marginal_effects.jpg")
+
+?equi_test
+model_equi <- equi_test(model)
+model_equi_plot <- equi_test(model, out = "plot")
+model_equi_plot
+
+marginal_effects(model)
+
+marginal_effects(model, spaghetti = T)
+
+hu_fits <- fitted(model, dpar = "hu") %>% as_tibble()
+hist(hu_fits$Estimate)
+
+sort(model$data$latency)
+
+model$formula
+
+?brms::hurdle_negbinomial()
+
+model
+
+test_data <- model$data
+
+test_data$latency[test_data$latency > 0] <- 1
+
+test_data
+
+test_model <- brm(data = test_data, family = bernoulli,
+             bf(latency ~ 1 + treatment + trial +
+                  (1 + treatment + trial | group_ID) +
+                  (1 + treatment + trial | tank)),
+             iter = 1000, warmup = 500, chains = 3, cores = future::availableCores(),
+             control = list(adapt_delta = 0.95, max_treedepth = 15))
+
+test_model
+
+marginal_effects(test_model)
 
 # # read data
 # d <- read_csv("GroupSizeNovelAssay_FinalDataSheet_BitesFood.csv")
