@@ -70,7 +70,7 @@ accel %>%
   ggtitle("Difference in Latency Between Each Individual,\n Ordered By Latency") +
   MCMsBasics::minimal_ggplot_theme()
 
-ggsave("latency/images/acceleration_analysis_8.jpeg", width = 7, height = 7)
+ggsave("latency/images/acceleration_analysis_8.jpeg", width = 7, height = 7, dpi = 300)
 
 
 
@@ -185,7 +185,7 @@ accel %>%
   ggtitle("Difference in Latency Between Each Individual,\n Ordered By Latency") +
   MCMsBasics::minimal_ggplot_theme()
 
-ggsave("latency/images/acceleration_analysis_4.jpeg", width = 7, height = 7)
+ggsave("latency/images/acceleration_analysis_4.jpeg", width = 7, height = 7, dpi = 300)
 
 
 accel %>% 
@@ -294,7 +294,7 @@ accel %>%
   geom_density(fill = "blue", alpha = 0.5, color = "transparent") +
   geom_density(data = trial_samples, aes(x = lat_diff), fill = "red", alpha = 0.5, color = "transparent")
 
-ggsave("latency/images/acceleration_analysis_2.jpeg", width = 7, height = 7)
+ggsave("latency/images/acceleration_analysis_2.jpeg", width = 7, height = 7, dpi = 300)
 
 
 
