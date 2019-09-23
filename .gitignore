@@ -10,8 +10,8 @@ latency/fit_models/
 latency/fit_models/lat_nov_hurd_nbin_hu_fit.rds
 latency/fit_models/lat_pred_hurd_nbin_hu_fit.rds
 latency/fit_models/lat_typ_hurd_nbin_hu_fit.rds
+manuscript_and_talk_figs_results/abs_2019/*.jpg
+manuscript_and_talk_figs_results/abs_2019/*.pdf
+manuscript_and_talk_figs_results/abs_2019/*.tiff
 old_stuff/fit_models/
 old_stuff/fit_models/fit_multivariate_group_size_novel_nbin_farm.rds
-manuscript_and_talk_figs_results/abs_2019/*.jpg
-manuscript_and_talk_figs_results/abs_2019/*.tiff
-manuscript_and_talk_figs_results/abs_2019/*.pdf

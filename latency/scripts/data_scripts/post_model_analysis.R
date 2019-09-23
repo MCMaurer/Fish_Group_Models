@@ -5,13 +5,16 @@
 
 library(tidyverse)
 library(brms)
-library(ggthemes)
-library(ggExtra)
-library(ggeffects)
+#library(ggthemes)
+#library(ggExtra)
+#library(ggeffects)
 library(broom)
 library(ggridges)
 library(MCMsBasics)
 library(sjstats)
+library(plotly)
+
+theme_set(MCMsBasics::minimal_ggplot_theme())
 
 # make a custom theme
 
@@ -352,6 +355,9 @@ icc(typ_int, ppd = T, typical = "median", re.form = ~(1|group_ID))
 
 
 
+
+
+
 source("figure_generating_functions.R")
 
 p <- marginal_effects_plot(model = model_6, effects = c("trial"), effect_types = c("categorical"))
@@ -656,54 +662,154 @@ test_model
 
 marginal_effects(test_model)
 
-# # read data
-# d <- read_csv("GroupSizeNovelAssay_FinalDataSheet_BitesFood.csv")
-# 
-# # gather the latency measurements together
-# d <- gather(d, key = "individual", value = "latency", 8:15)
-# 
-# # get rid of comments column
-# d$X__1 <- NULL
-# 
-# # strip out some extra words
-# d$individual <- as.numeric(str_replace_all(d$individual, "novel_bite", ""))
-# 
-# # if the latency value is actually a number, keep a number. If not, it's NA
-# d <- d %>% 
-#   mutate(
-#     latency = case_when(
-#       str_detect(latency, "^[0-9]+$") ~ as.numeric(latency),
-#       TRUE ~ NA_real_
-#     ))
-# 
-# # let's do some violin plots
-# d %>% 
-#   filter(!is.na(latency)) %>%
-#   ggplot(aes(x=as.factor(treatment), y=latency, group = treatment))+
-#   geom_violin()+
-#   geom_jitter(color = "black", stroke = 0, size = 2.1, alpha = 0.1, fill = "transparent")+
-#   custom_minimal_theme()
-# 
-# ggsave("violin_plot_latency_data.jpg")
-# 
-# # let's just look at mean values by treatment
-# d %>% 
-#   group_by(treatment) %>% 
-#   filter(!is.na(latency)) %>% 
-#   summarise(mean_latency = mean(latency), n = n())
-# 
-# # let's fit a model! keeping adapt_delta and max_treedepth high
-# model_1 <- brm(data = d, family = poisson, 
-#                latency ~ 1 + treatment + trial +
-#                  (1 + treatment + trial | group_ID) +
-#                  (1 + treatment + trial | tank),
-#                prior = c(set_prior("normal(0, 1)", class = "Intercept"),
-#                          set_prior("normal(0, 1)", class = "b"),
-#                          set_prior("cauchy(0, 2)", class = "sd"),
-#                          set_prior("lkj(4)", class = "cor")),
-#                iter = 5000, warmup = 1000, chains = 3, cores = 3, control = list(adapt_delta = 0.99, max_treedepth = 15), save_model = "stan_model_1")
-# BRRR::skrrrahh(36)
-# 
-# system("git add .")
-# system("git commit -a -m 'trying the model and pushing to github'")
-# system("git push")
+
+
+# initiator-follower by group size ----------------------------------------
+
+data <- read_rds("latency/data/cleaned/latency_typical_food.rds")
+
+data %>% 
+  filter(!is.na(latency)) %>% 
+  arrange(group_ID, trial, individual)
+
+data %>%
+  select(-individual, -tank, -camera, -video) %>% 
+  group_by(group_ID, trial) %>% 
+  arrange(latency) %>% 
+  mutate(order = rank(latency, ties.method = "first")) %>% 
+  filter(order %in% 1:2) %>% 
+  spread(key = order, value = latency) %>% 
+  rename(first = `1`, second = `2`) %>% 
+  mutate(diff = second-first) %>% 
+  ggplot(aes(x = factor(treatment, ordered = T, levels = c("2", "4", "8")), y = diff)) +
+  geom_violin() +
+  geom_jitter(alpha = 0.1) +
+  MCMsBasics::minimal_ggplot_theme() +
+  xlab("Group Size") +
+  ylab("Difference in Latency Between 1st and 2nd Individual")
+  
+
+# latency plateau plot ---------------------------------------------------
+
+data <- read_rds("latency/data/cleaned/latency_typical_food.rds") %>% 
+  select(group_ID, trial, treatment, latency)
+
+data <- data %>%
+  filter(!is.na(latency)) %>% 
+  group_by(group_ID, trial, treatment) %>% 
+  arrange(latency) %>% 
+  mutate(order = rank(latency, ties.method = "first")) %>% 
+  arrange(desc(treatment), group_ID, desc(order)) %>% 
+  ungroup() %>% 
+  group_by(group_ID, trial, latency, treatment) %>% 
+  tally() %>% 
+  ungroup() %>% 
+  group_by(group_ID, trial, treatment) %>% 
+  arrange(latency) %>% 
+  mutate(cumu_n = cumsum(n)) %>% 
+  arrange(desc(treatment), group_ID, trial, latency) %>% 
+  select(-n) %>% 
+  ungroup()
+
+data %>% 
+  filter(treatment == 2) %>% 
+  filter(!is.na(latency)) %>% 
+  select(-individual, -tank, -camera, -video) %>% 
+  split(f = list(data$group_ID, data$trial, data$treatment)) %>% 
+  map(~add_row(., latency = 0)) %>% 
+  bind_rows()
+
+starts <- data %>%
+  distinct(trial, group_ID, treatment) %>% 
+  mutate(latency = 0, cumu_n = 0)
+
+data %>% 
+  filter(treatment == 8, trial == 1)
+
+testplot <- data %>% 
+  #filter(treatment == 8, trial == 1) %>% 
+  ggplot(aes(x = latency, y = cumu_n, group = interaction(group_ID, trial), color = trial)) +
+  geom_step() +
+  facet_wrap(~treatment)
+testplot
+ggplotly(testplot)
+
+ends <- data %>% 
+  group_by(treatment, group_ID, trial) %>% 
+  top_n(n = 1, wt = cumu_n) %>% 
+  ungroup() %>% 
+  mutate(treatment = factor(treatment, ordered = T, levels = c(2,4,8)),
+         trial = factor(trial, ordered = T, levels = 1:3))
+
+# regular x scale
+data2 <- bind_rows(data, starts) %>% 
+  arrange(group_ID, trial, cumu_n) %>% 
+  mutate(treatment = factor(treatment, ordered = T, levels = c(2,4,8)),
+         trial = factor(trial, ordered = T, levels = 1:3))
+data2
+ends
+
+treatment_names <- c(
+  `2` = "Groups of 2",
+  `4` = "Groups of 4",
+  `8` = "Groups of 8"
+)
+  
+ggplot() +
+  geom_step(data = data2, alpha = 0.4, direction = "hv", aes(x = latency, y = cumu_n, color = trial, group = interaction(group_ID, trial))) +
+  geom_point(data = ends, alpha = 0.4, aes(x = latency, y = cumu_n, color = trial, 
+                              group = interaction(group_ID, trial))) +
+  facet_grid(trial~treatment, labeller = labeller(
+    trial = c(`1` = "Trial 1", `2` = "Trial 2", `3` = "Trial 3"),
+    treatment = c(`2` = "Groups of 2", `4` = "Groups of 4", `8` = "Groups of 8")
+  )) +
+  ylab("# of Fish That Have Eaten") +
+  xlab("Trial Time (s)") +
+  theme(legend.position = "none") +
+  theme(panel.background = element_rect(fill = NA, color = "gray80"), panel.spacing = unit(0, "mm"))
+
+# log x scale
+bind_rows(data, starts) %>% 
+  arrange(group_ID, trial, cumu_n) %>% 
+  mutate(treatment = factor(treatment, ordered = T, levels = c(2,4,8)),
+         trial = factor(trial, ordered = T, levels = 1:3)) %>% 
+  ggplot(aes(x = latency+1, y = cumu_n, color = trial, 
+             group = interaction(group_ID, trial))) +
+  geom_step(alpha = 0.5, direction = "hv") +
+  facet_wrap(~treatment) +
+  scale_x_log10()
+
+
+# quick look at slowest individuals ---------------------------------------
+
+
+data <- read_rds("latency/data/cleaned/latency_typical_food.rds") %>% 
+  select(group_ID, trial, treatment, latency) %>% 
+  mutate(treatment = factor(treatment, ordered = T, levels = c(2,4,8)),
+         trial = factor(trial, ordered = T, levels = 1:3))
+
+data %>% 
+  group_by(group_ID, treatment, trial) %>% 
+  top_n(n = 1, wt = latency) %>% 
+  arrange(treatment, trial, group_ID) %>% 
+  ggplot(aes(x = treatment, y = latency)) +
+  geom_violin() +
+  geom_jitter(aes(color = trial)) +
+  ylab("latency of slowest individual per group")
+
+# it looks like the slowest individual across all the treatments doesn't really differ that much! which is interesting, as it suggests a group of 8 isn't really any more likely to have a super slow individual than a group of 2, which suggests that something is *actually* going on here
+
+data %>% 
+  group_by(group_ID, treatment, trial) %>% 
+  arrange(latency) %>% 
+  top_n(n = -1, wt = latency) %>% 
+  arrange(treatment, trial, group_ID) %>% 
+  ggplot(aes(x = treatment, y = latency)) +
+  geom_violin() +
+  geom_jitter(aes(color = trial)) +
+  ylab("latency of fastest individual per group")
+
+
+# diff between fastest 2 --------------------------------------------------
+
+

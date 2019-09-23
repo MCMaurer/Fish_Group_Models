@@ -1,5 +1,49 @@
 # A running to-do list for me
 
+## List as of 8/9
+
+**could knowing the ORDER of an individual measurement be used as a predictor? for instance, if you knew that an individual had already moved, would that help you identify at what time another individual would move?**
+
+1. Does group ID matter differently depending on treatment group?
+-try calculating ICC for each different treatment to try and answer this
+
+*update 9/18*: did this, it's rad
+
+2. Is there a difference in the intitiator-follower relationship depending on treatment?
+-try plottting the change in time between intiation and first follow for each treament
+(x-axis: treament; y-axis: change in time between first and second lantency)
+
+*update 9/18*: done
+
+3. Interested in how variance between individuals within a group changes with trial. Our current models would have this information?
+
+*could you get at this by doing ICC with trial as well?*
+
+looks like there's no difference here
+
+
+4. Is there a relationship between the amount of food eaten and the group's latencies?
+-try plotting amount eaten on the y-axis and average group latency on the x-axos, with one line per group size. try plotting amount eaten on the y-axis and average group latency on the x-axos, with one line per group size-also try plotting amount eaten on the y-axis and proportion of individuals that fed in the group on the the x-axos, 3 plots, one for each treatment group
+
+model <- brm(data = d, family = binomial(), 
+               food_eaten | trials(food_input) ~ 1 + treatment + trial + mean_group_lat
+                 (1 + treatment + trial + mean_group_lat | group_ID) +
+                 (1 + treatment + trial + mean_group_lat | tank),
+               prior = c(set_prior("normal(0, 1)", class = "Intercept"),
+                         set_prior("normal(0, 1)", class = "b"),
+                         set_prior("cauchy(0, 2)", class = "sd"),
+                         set_prior("lkj(4)", class = "cor")),
+               iter = 5000, warmup = 1000, chains = 3, cores = future::availableCores(), 
+               control = list(adapt_delta = 0.98, max_treedepth = 15))
+
+5. Plateau plot (a reverse survival plot) where proportion of group that eats is on the y-axis
+
+done!
+
+*this is actually latency values on x axis*
+
+6. Any inspiration from the McDonald paper?
+
 ## Updated list as of 7/4/19
 
 1) Finish all the hurdle models
