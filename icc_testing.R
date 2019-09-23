@@ -3,31 +3,18 @@
 library(tidyverse)
 library(sjstats)
 library(brms)
-library(performance)
+#library(performance)
 
 typ_int <- readRDS("latency/fit_models/lat_typ_int_hurd_nbin_hu_fit.rds")
 typ_hu <- readRDS("latency/fit_models/lat_typ_hurd_nbin_hu_fit.rds")
 
-waic(typ_int, typ_hu)
-loo(typ_int, typ_hu)
-kfold(typ_int, typ_hu, K = 10)
-
-?loo.brmsfit
-
-icc.brmsfit
-
 
 icc(typ_int, adjusted = TRUE, ppd = TRUE, typical = "median", re.form = ~(1 | group_ID))
-performance::icc(typ_int, re.form = ~(1 | group_ID), robust = T)
-performance::icc(typ_hu, re.form = ~(1 | group_ID), robust = T)
-
-methods(icc)
-?methods
 
 getAnywhere(icc.brmsfit)
 
 
-
+# this is just the icc() function from the sjstats package, but with the ability to pass new data into the function. By default, it takes all the data from the model you provide (the "x" argument), but you can also pass in new data as shown in the example below
 my_icc <- function (x, re.form = NULL, typical = "mean", prob = 0.89, ppd = FALSE, newdata = NULL,
                     ...) 
 {
@@ -119,7 +106,7 @@ my_icc <- function (x, re.form = NULL, typical = "mean", prob = 0.89, ppd = FALS
 }
 
 
-
+# you take the model you want (typ_int in this case), use $ to get the data out of it, then filter to only include the treatment you want, then pipe that into the my_icc() function. Note that newdata = ., the period goes along with the pipe after the filter() argument. The period says "hey pipe, send your contents right here". This is because we want to feed the new data to the newdata argument.
 icc_2 <- typ_int$data %>% 
   filter(treatment == 2) %>% 
   my_icc(typ_int, adjusted = F, ppd = TRUE, typical = "median", 
