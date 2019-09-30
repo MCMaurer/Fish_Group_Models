@@ -1,0 +1,107 @@
+---
+title: "Group Fish Model Results"
+author: "Lea Pollack and Michael Culshaw-Maurer"
+date: "9/30/2019"
+output: html_document
+---
+
+Results: Group Size and Microplastics Report
+
+
+Synopsis: 
+
+We experimentally tested how group size influences individual behavior, including plastic consumption, in mosquitofish. In natural settings, social animals live in groups that vary in both size and membership. The size of a social group has the potential to influence the spread of social information, amount of behavioral variation, and perception of social information. 
+
+Methods
+
+The behavioral experiments were performed between August and October 2017 at the Center for Aquatic Biology and Aquaculture (CABA) facilities at the University of California, Davis. Female mosquitofish, donated from the Sacramento-Yolo Mosquito and Vector Control District, were used for this study. Fish were housed in in 10 gal tanks of 40 individuals for a week to acclimate to lab conditions (14:10 light:dark photoperiod, 22°C). During this acclimation period, fish were fed ad libitum with a mixture of Tetramin fish flakes and floating pellets.  For the subsequent behavioral assays, 532 individuals were randomly separated into 116 groups: 40 groups of 2 individuals; 39 groups of 4 individuals; and 37 groups of 8 individuals. Groups were observed over 6 blocks of 5 days, totaling 30 days of trials.  All groups were comprised of subsets of individuals from the same home tank, such that all fish had the opportunity to interact prior to being divided into groups. Groups were formed 24 hours before the start of observations and housed together until the end of trials 5 days later. Each group experienced three sets of behavioral assays, performed every other day in an observational arena. 
+	In order to reduce peripheral vision outside the arena, aquaria walls were lined with black plastic bags and then frosted on the inside glass to reduce reflectiveness. Observations were filmed from above for later analysis. Behavioral assays for each group were performed in blocks of 4 assays in the same order each day: baseline activity, predation cue, known food item, and novel food item. Groups were allowed 2 minutes of acclimation without an observer present in the room before behavioral observations began. The assays were sequentially performed as follows:
+
+Activity assay: Groups were recorded for 5 minutes of uninterrupted baseline activity within the empty arena. This baseline activity period was used to establish a standard for number and duration of aggressive interactions (defined by chasing events) between individuals in the group in the absence of predator or food stimuli. The number and duration of aggressive interactions was also recorded during all subsequent assays.
+
+Predator cue assay: Groups were recorded for 5 minutes following the introduction of a predator cue, which consisted of a wooden dowel weighted by galvanized steel hex nuts that struck the surface of the water and then was immediately removed. After the predator cue, fish performed a variety of anti-predator behaviors, including erratic movements and freezing. Therefore, boldness in the face of predation was measured as the latency until each individual in the group resumed general movement behavior (either stopped erratic movements or freezing). This particular predator cue was chosen because mosquitofish often feed from the surface, and thus a predator cue from above should alter fish impression of the surface and how they forage in the subsequent foraging assays. 
+
+Known food assay: Groups were recorded for 5 minutes immediately following the introduction of known brown floating food pellets through airline tubing. Voracity was measured as the latency until each individual in the group sampled a pellet. 
+
+Novel food assay: Groups were recorded for 5 minutes immediately following the introduction of a novel food though airline tubing. The novel food was varied for each trial, but introduced in the same sequence for each group to control for the effect of order of introduction across groups. The novel foods introduced were brine shrimp (frozen and then defrosted, highly palatable), glass beads (similar in color and size to the brine shrimp, not palatable), and biofouled microplastics (polyethylene particles kept in water from Putah Creek [Davis, CA] for 1 month to accumulate natural biofilm growth). Boldness toward a novel food was measured as the latency to sample the novel item for each individual. At the conclusion of the last assay, individuals were weighed, measured, and euthanized in an overdose of buffered ms-222 solution and frozen. 
+Video scoring and analysis: Behaviors were be scored using Jwatcher software (Blumstein & Daniel 2007). 
+	
+	*Michael, tell the good people what else we did!
+	*I think we will need a sentence or two describing the variance ratio and how it is equivalent to ICC- a citation or two will help with that if you have it
+
+
+
+Results
+
+Question 1: How do differences in social group size influence collective behaviors, such as anti-predator behaviors, foraging behavior, or boldness in the face of novel objects? 
+
+ (1) I predict that the mean time it takes for all individuals in the group to begin normal, unstressed movement (a proxy for boldness in the presence of a predator) will be faster for larger groups compared to smaller groups. 
+
+**Michael please report the results from the latency predator model (for some reason couldn’t find it on your git hub), including any model comparison
+**Include marginal effects plot and posterior estimates in a table 
+
+(2) I predict that the mean time it takes for all of the individuals in the group to begin sampling a known food at the surface five minutes after a predation cue directed at the surface of the water (a proxy for voracity) will be faster for larger groups compared to smaller groups. 
+
+**Michael please report the results from the latency known food model including any model comparison
+**Include marginal effects plot (including hurdle) and posterior estimates in a table
+
+
+(3) I predict that the mean time it takes for all the individuals in the group to begin sampling a novel food (a proxy for boldness toward a novel object) will for larger groups compared to smaller groups. 
+
+**Michael please report the results from the novel food model including any model comparison
+**Include marginal effects plot (including hurdle) and posterior estimates in a table
+
+
+(4) Furthermore, I predict that the time it takes for the first individual, and the time difference between the first and second individual, to begin unstressed movement, (6) sample known food, and (7) sample novel food will be positively correlated with group size.
+
+**Michael please report what you do have in terms of the models that explored the time difference between the first and the second individual I think you might have only done this for the known food though, right? Just put that plot and any test of significance you did between the randomized and real data.
+
+**Michael, it would also be good here to report the model that looked at the time difference between the last two individuals, since this was a good comment on sampling bias, right? I think you might have only done this for the known food though, right? Just put that plot and any test of significance you did between the randomized and real data.
+
+Question 2: What is the role of group ID versus group size? In other words, how much do your group-mates influence your behavior? Does group size influence levels of collective behavior repeatability? 
+
+**Michael report the variance ratio information (value and credible intervals) for all 3 trial types
+**Michael report the variance ration information between the group size treatments for all 3 trial types (and maybe explain in a sentence why its not reliable information so Andy understands why we can’t use it)
+
+**Michael report the model that compares randomly assembled groups with real groups times (this might be only for known food right now)
+
+**Did you run the model that looks at how the variance between individuals changes with trial for each group size component? We talked about doing that last time as a measurement of group cohesion over time. Could be cool!Did you ever look at this? Talk to me about model structure if you didn't!
+
+
+
+Question 3: Are certain collective behaviors correlated in groups (i.e., is there a group syndrome)?
+
+**Chases models here (We should have chase data for 4 assays per trial per group, let me know if we can’t find that!)–differences in percap group chasing? (also icc, is there consistency in group aggression)
+**are there correlations between group per-capita chasing rates and the other latency values? Did you ever look at this? Talk to me about model structure if you didn't!
+
+**Are there correlations between average group latencies? I.e., WITHIN GROUP SIZE, are mean group eating speed correlated with mean group novel food eating speed. Did you ever look at this? Talk to me about model structure if you didn't!
+
+
+
+
+Question 4: Proportion of food eaten - are groups repeatable in the amount of food eaten? Are there differences between group sizes in the amount of food eaten?
+
+***Michael – output from aggregated binomial models and then calculate ICC for these groups as well
+
+***Did we ever look at whether proportion eaten (known food) correlated with mean latency to eat (known food) in that same trial? I.e., “do faster fish groups eat more”)
+	
+ 
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+

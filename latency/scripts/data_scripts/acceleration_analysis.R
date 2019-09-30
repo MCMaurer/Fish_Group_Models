@@ -19,7 +19,6 @@ accel %>%
   geom_point(aes(group = group_ID, color = as.factor(trial))) +
   geom_smooth()
 
-
 # making random groups
 
 # create array to hold data

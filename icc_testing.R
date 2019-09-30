@@ -3,6 +3,7 @@
 library(tidyverse)
 library(sjstats)
 library(brms)
+library(ggridges)
 #library(performance)
 
 typ_int <- readRDS("latency/fit_models/lat_typ_int_hurd_nbin_hu_fit.rds")
@@ -196,3 +197,57 @@ icc_group <- map_dfr(.x = c(2,4,8), .f = my_icc_subset, model = typ_int, prob = 
 icc_group
 
 my_icc_subset(treatment = "all", trial = "all", model = typ_int, prob = 0.95)
+
+
+
+
+# trying a new plot type --------------------------------------------------
+
+
+library(tidybayes)
+library(ggstance)
+
+get_variables(typ_int)
+
+mtcars %>% 
+  rownames_to_column() %>% 
+  filter(str_detect(rowname, "^H"))
+
+typ_int %>% 
+  spread_draws(b_Intercept, r_group_ID[group_ID,Intercept]) %>% 
+  mutate(group_ID_intercept = b_Intercept + r_group_ID) %>%
+  filter(str_detect(group_ID, "^8")) %>% 
+  ggplot(aes(y = reorder(group_ID, group_ID_intercept), x = group_ID_intercept)) +
+  stat_halfeyeh(show_interval = F) +
+  MCMsBasics::minimal_ggplot_theme() +
+  xlab("Posterior Distribution of\nModel Intercept by Group") +
+  ylab("Group ID")
+
+
+typ_int %>% 
+  gather_draws(b_Intercept, b_treatment, b_trial) %>% 
+  ggplot(aes(x = .value, y = .variable)) +
+  geom_halfeyeh(size = 1, show_interval = F) +
+  geom_vline(xintercept = 0) +
+  MCMsBasics::minimal_ggplot_theme()
+
+typ_int %>% 
+  gather_draws(b_Intercept, b_treatment, b_trial) %>% 
+  ggplot(aes(x = .value, y = .variable, height = ..density..)) +
+  geom_density_ridges(stat = "density", trim = T, fill = "gray60", color = NA) +
+  geom_vline(xintercept = 0) +
+  MCMsBasics::minimal_ggplot_theme()
+
+
+mtcars %>% 
+  ggplot(aes(x = wt, y = mpg, color = cyl)) +
+  geom_point(alpha = 0.5)
+
+
+
+
+
+
+
+
+
