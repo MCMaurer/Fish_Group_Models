@@ -6,6 +6,8 @@ library(brms)
 library(ggridges)
 #library(performance)
 
+theme_set(MCMsBasics::minimal_ggplot_theme())
+
 typ_int <- readRDS("latency/fit_models/lat_typ_int_hurd_nbin_hu_fit.rds")
 typ_hu <- readRDS("latency/fit_models/lat_typ_hurd_nbin_hu_fit.rds")
 
@@ -213,15 +215,21 @@ mtcars %>%
   rownames_to_column() %>% 
   filter(str_detect(rowname, "^H"))
 
+groups_treatments <- typ_int$data %>% 
+  select(treatment, group_ID) %>% 
+  distinct() %>% 
+  mutate(group_ID = factor(group_ID))
+
 typ_int %>% 
-  spread_draws(b_Intercept, r_group_ID[group_ID,Intercept]) %>% 
+  spread_draws(b_Intercept, r_group_ID[group_ID,Intercept], ) %>% 
   mutate(group_ID_intercept = b_Intercept + r_group_ID) %>%
-  filter(str_detect(group_ID, "^8")) %>% 
+  left_join(groups_treatments) %>% 
   ggplot(aes(y = reorder(group_ID, group_ID_intercept), x = group_ID_intercept)) +
   stat_halfeyeh(show_interval = F) +
   MCMsBasics::minimal_ggplot_theme() +
   xlab("Posterior Distribution of\nModel Intercept by Group") +
-  ylab("Group ID")
+  ylab("Group ID") +
+  facet_grid(~treatment, scales = "free", space = "free")
 
 
 typ_int %>% 
@@ -247,7 +255,18 @@ mtcars %>%
 
 
 
+# here's a raw way to calculate icc, as per https://discourse.mc-stan.org/t/rstanarm-extracting-variance-components/4409/4?u=michael_c-m
 
+# I also think we should do this for all the icc stuff, including tank in both
+PPD <- posterior_predict(typ_int, re.form = ~(1|group_ID) + (1|tank))
+vars <- apply(PPD, MARGIN = 1, FUN = var)
 
+PPD_0 <- posterior_predict(typ_int, re.form = ~ (1|tank))
+vars_0 <- apply(PPD_0, MARGIN = 1, FUN = var)
 
+icc_draws <- tibble(icc_draws = 1 - (vars_0/vars))
 
+icc_draws %>% 
+  ggplot(aes(x = icc_draws)) +
+  geom_histogram(bins = 80)
+  
