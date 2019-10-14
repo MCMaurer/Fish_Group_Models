@@ -82,7 +82,8 @@ lat_typ_nov$family
     - also do between-treatments
     
 6) chase models
-
+    - chases across different trials
+    - 
 ```{r}
 
 ```
@@ -96,8 +97,13 @@ lat_typ_nov$family
     - could also try a bigger
 
 9) food eaten models
+```{r}
+food_eaten <- read_rds("food_eaten/fit_models/prop_typ_eaten_aggress_1_aggbinom_fit.rds")
+```
 
 10) correlation between latency and food_eaten in same trial
+    - did this and they are correlated, but it's because both are explained by treatment and trial
+    - if you also include treatment and trial, food_eaten and latency add almost nothing
 
 **Do we want to describe each model with formulas or do we want to describe them verbally?**
 
@@ -142,6 +148,8 @@ lat_typ_nov$family
 
 *I could run an explicit model of this as well?*
 
+**Do explicit model of this, so a within-group measure of time between 1st and 2nd is the response variable**
+
 **Michael, it would also be good here to report the model that looked at the time difference between the last two individuals, since this was a good comment on sampling bias, right? I think you might have only done this for the known food though, right? Just put that plot and any test of significance you did between the randomized and real data.
 
 ## Question 2: What is the role of group ID versus group size? In other words, how much do your group-mates influence your behavior? Does group size influence levels of collective behavior repeatability? 
@@ -149,9 +157,11 @@ lat_typ_nov$family
 **Michael report the variance ratio information (value and credible intervals) for all 3 trial types
 **Michael report the variance ration information between the group size treatments for all 3 trial types (and maybe explain in a sentence why its not reliable information so Andy understands why we can’t use it)
 
-**Michael report the model that compares randomly assembled groups with real groups times (this might be only for known food right now)
+**Michael report the model that compares randomly assembled groups with real groups times (this might be only for known food right now)**include plot in bottom, but don't model, sorry!
 
 **Did you run the model that looks at how the variance between individuals changes with trial for each group size component? We talked about doing that last time as a measurement of group cohesion over time. Could be cool!Did you ever look at this? Talk to me about model structure if you didn't!
+
+**could look at variance of a group as the response variable for a model with trial and treatment as predictors**
 
 *have not done this yet but could whip something up!*
 
@@ -173,4 +183,4 @@ lat_typ_nov$family
 
 ***Did we ever look at whether proportion eaten (known food) correlated with mean latency to eat (known food) in that same trial? I.e., “do faster fish groups eat more”)
 	
-*nope, haven't done this yet, but definitely could!* 
+**did this, put results here**
