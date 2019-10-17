@@ -6,9 +6,12 @@ output: html_document
 ---
 
 ```{r, setup, include=F}
+knitr::opts_chunk$set(echo = F)
 library(tidyverse)
 library(brms)
+library(tidybayes)
 theme_set(theme_minimal())
+source("figure_generating_functions.R")
 ```
 
 
@@ -44,7 +47,7 @@ To analyze the effects of group size and trial on behavioral assay outcomes, we 
 1) latency post predator
     - lat_pred
     
-```{r}
+```{r, echo=F}
 lat_pred_int <- read_rds("latency/fit_models/lat_pred_int_hurd_nbin_hu_fit.rds")
 lat_pred_int$formula
 lat_pred_int$family
@@ -54,7 +57,7 @@ lat_pred_int$family
 2) latency known food
     - typ_int
     
-```{r}
+```{r, echo=F}
 lat_typ_int <- read_rds("latency/fit_models/lat_typ_int_hurd_nbin_hu_fit.rds")
 lat_typ_int$formula
 lat_typ_int$family
@@ -118,11 +121,17 @@ food_eaten <- read_rds("food_eaten/fit_models/prop_typ_eaten_aggress_1_aggbinom_
 
 **Michael please report the results from the latency predator model (for some reason couldn’t find it on your git hub), including any model comparison
 **Include marginal effects plot and posterior estimates in a table 
-```{r, lat_pred marginal effects, echo=F}
-
+```{r, lat_pred marginal effects, echo=F, cache=T}
+marginal_effects_plot(model = lat_pred_int, effects = c("treatment", "trial"))
 ```
 
-```{r, lat_pred coefficient table}
+```{r, lat_pred coefficient table, cache=T, echo=F}
+lat_pred_int %>% 
+  gather_draws(`^b.*`, shape, regex = T) %>% 
+  median_hdi() %>% 
+  select(.variable, .value, .lower, .upper) %>% 
+  rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  knitr::kable()
 
 ```
 

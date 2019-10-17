@@ -197,6 +197,6 @@ param_estimate_plot <- function(model, num_params = 4){
 #   mutate(trial = fct_inorder(trial)) %>%
 #   str()
 # 
-e <- e %>%
-  mutate_if(is.factor, fct_inorder)
+# e <- e %>%
+#   mutate_if(is.factor, fct_inorder)
 
