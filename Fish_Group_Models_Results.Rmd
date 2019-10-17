@@ -129,6 +129,7 @@ lat_pred_int %>%
   median_hdi() %>% 
   select(.variable, .value, .lower, .upper) %>% 
   rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  mutate(overlap_zero = hdi_2.5 < 0 & hdi_97.5 > 0) %>%
   knitr::kable()
 ```
 
@@ -149,6 +150,7 @@ lat_typ_int %>%
   median_hdi() %>% 
   select(.variable, .value, .lower, .upper) %>% 
   rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  mutate(overlap_zero = hdi_2.5 < 0 & hdi_97.5 > 0) %>%
   knitr::kable()
 ```
 
@@ -168,6 +170,7 @@ lat_nov_int %>%
   median_hdi() %>% 
   select(.variable, .value, .lower, .upper) %>% 
   rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  mutate(overlap_zero = hdi_2.5 < 0 & hdi_97.5 > 0) %>%
   knitr::kable()
 ```
 
