@@ -47,7 +47,7 @@ To analyze the effects of group size and trial on behavioral assay outcomes, we 
 1) latency post predator
     - lat_pred
     
-```{r, echo=F}
+```{r}
 lat_pred_int <- read_rds("latency/fit_models/lat_pred_int_hurd_nbin_hu_fit.rds")
 lat_pred_int$formula
 lat_pred_int$family
@@ -57,7 +57,7 @@ lat_pred_int$family
 2) latency known food
     - typ_int
     
-```{r, echo=F}
+```{r}
 lat_typ_int <- read_rds("latency/fit_models/lat_typ_int_hurd_nbin_hu_fit.rds")
 lat_typ_int$formula
 lat_typ_int$family
@@ -68,9 +68,9 @@ lat_typ_int$family
     - nov_int
     
 ```{r}
-lat_typ_nov <- read_rds("latency/fit_models/lat_nov_int_hurd_nbin_hu_fit.rds")
-lat_typ_nov$formula
-lat_typ_nov$family
+lat_nov_int <- read_rds("latency/fit_models/lat_nov_int_hurd_nbin_hu_fit.rds")
+lat_nov_int$formula
+lat_nov_int$family
 ```
 
     
@@ -114,16 +114,16 @@ food_eaten <- read_rds("food_eaten/fit_models/prop_typ_eaten_aggress_1_aggbinom_
 
 ## Question 1: How do differences in social group size influence collective behaviors, such as anti-predator behaviors, foraging behavior, or boldness in the face of novel objects? 
 
-1) We predict that individuals in large groups will begin normal, unstressed movements post-predator cue (a proxy for boldness in the presence of a predator) more quickly than individuals in smaller groups.
+### 1) We predict that individuals in large groups will begin normal, unstressed movements post-predator cue (a proxy for boldness in the presence of a predator) more quickly than individuals in smaller groups.
 
 **Michael please report the results from the latency predator model (for some reason couldn’t find it on your git hub), including any model comparison
 **Include marginal effects plot and posterior estimates in a table 
-```{r, lat_pred marginal effects, echo=F, cache=T}
+```{r, lat_pred marginal effects, cache=T}
 marginal_effects_plot(model = lat_pred_int, effects = c("treatment", "trial"))
 marginal_effects_plot(model = lat_pred_int, effects = c("treatment", "trial"), dpar = "hu")
 ```
 
-```{r, lat_pred coefficient table, cache=T, echo=F}
+```{r, lat_pred_int coefficient table, cache=T}
 lat_pred_int %>% 
   gather_draws(`^b.*`, shape, regex = T) %>% 
   median_hdi() %>% 
@@ -133,18 +133,45 @@ lat_pred_int %>%
 ```
 
 
-2) We predict that individuals in larger groups will begin sampling a known food at the water surface post-predator cue (a proxy for voracity) more quickly than individuals in smaller groups.
+### 2) We predict that individuals in larger groups will begin sampling a known food at the water surface post-predator cue (a proxy for voracity) more quickly than individuals in smaller groups.
 
 **Michael please report the results from the latency known food model including any model comparison
 **Include marginal effects plot (including hurdle) and posterior estimates in a table
 
-3) We predict that individuals in larger groups will begin sampling a novel food (a proxy for boldness toward a novel object) more quickly than individuals in smaller groups.
+```{r, lat_typ_int, cache=T}
+marginal_effects_plot(model = lat_typ_int, effects = c("treatment", "trial"))
+marginal_effects_plot(model = lat_typ_int, effects = c("treatment", "trial"), dpar = "hu")
+```
+
+```{r, lat_typ_int coefficient table, cache=T}
+lat_typ_int %>% 
+  gather_draws(`^b.*`, shape, regex = T) %>% 
+  median_hdi() %>% 
+  select(.variable, .value, .lower, .upper) %>% 
+  rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  knitr::kable()
+```
+
+### 3) We predict that individuals in larger groups will begin sampling a novel food (a proxy for boldness toward a novel object) more quickly than individuals in smaller groups.
 
 **Michael please report the results from the novel food model including any model comparison
 **Include marginal effects plot (including hurdle) and posterior estimates in a table
 
+```{r, lat_nov_int, cache=T}
+marginal_effects_plot(model = lat_nov_int, effects = c("treatment", "trial"))
+marginal_effects_plot(model = lat_nov_int, effects = c("treatment", "trial"), dpar = "hu")
+```
 
-(4) Furthermore, I predict that the time it takes for the first individual, and the time difference between the first and second individual, to begin unstressed movement, (6) sample known food, and (7) sample novel food will be positively correlated with group size.
+```{r, lat_nov_int coefficient table, cache=T}
+lat_nov_int %>% 
+  gather_draws(`^b.*`, shape, regex = T) %>% 
+  median_hdi() %>% 
+  select(.variable, .value, .lower, .upper) %>% 
+  rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  knitr::kable()
+```
+
+### (4) Furthermore, I predict that the time it takes for the first individual, and the time difference between the first and second individual, to begin unstressed movement, (6) sample known food, and (7) sample novel food will be positively correlated with group size.
 
 **Michael please report what you do have in terms of the models that explored the time difference between the first and the second individual I think you might have only done this for the known food though, right? Just put that plot and any test of significance you did between the randomized and real data.
 
