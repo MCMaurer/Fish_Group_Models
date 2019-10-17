@@ -19,7 +19,7 @@ marginal_effects_plot <- function(model, effects, color = effects[2], ci_type = 
   
   response <- attributes(e[[1]])$response
   if(response == "hu"){
-    response <- "probability of crossing hurdle"
+    response <- "probability of\ncrossing hurdle"
   }
   
   # pull out the dataframe from the marginal effects call
@@ -28,7 +28,7 @@ marginal_effects_plot <- function(model, effects, color = effects[2], ci_type = 
   e <- e %>%
     mutate_if(is.factor, fct_inorder)
   
-  if(response == "probability of crossing hurdle"){
+  if(response == "probability of\ncrossing hurdle"){
     e <- e %>% 
       mutate(estimate__ = 1 - estimate__,
              lower__ = 1 - lower__,

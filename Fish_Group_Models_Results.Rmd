@@ -114,15 +114,13 @@ food_eaten <- read_rds("food_eaten/fit_models/prop_typ_eaten_aggress_1_aggbinom_
 
 ## Question 1: How do differences in social group size influence collective behaviors, such as anti-predator behaviors, foraging behavior, or boldness in the face of novel objects? 
 
- (1) I predict that the mean time it takes for all individuals in the group to begin normal, unstressed movement (a proxy for boldness in the presence of a predator) will be faster for larger groups compared to smaller groups. *I don't think this wording really matches up with what we measured and ran models on*
- 
-*perhaps something like this:*
-1) I predict that individuals in large groups will begin normal, unstressed movements (a proxy for boldness in the presence of a predator) more quickly than individuals in smaller groups.
+1) We predict that individuals in large groups will begin normal, unstressed movements post-predator cue (a proxy for boldness in the presence of a predator) more quickly than individuals in smaller groups.
 
 **Michael please report the results from the latency predator model (for some reason couldn’t find it on your git hub), including any model comparison
 **Include marginal effects plot and posterior estimates in a table 
 ```{r, lat_pred marginal effects, echo=F, cache=T}
 marginal_effects_plot(model = lat_pred_int, effects = c("treatment", "trial"))
+marginal_effects_plot(model = lat_pred_int, effects = c("treatment", "trial"), dpar = "hu")
 ```
 
 ```{r, lat_pred coefficient table, cache=T, echo=F}
@@ -132,20 +130,15 @@ lat_pred_int %>%
   select(.variable, .value, .lower, .upper) %>% 
   rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
   knitr::kable()
-
 ```
 
 
-(2) I predict that the mean time it takes for all of the individuals in the group to begin sampling a known food at the surface five minutes after a predation cue directed at the surface of the water (a proxy for voracity) will be faster for larger groups compared to smaller groups. 
-
-*alternative*
-2) We predict that individuals in larger groups will begin sampling a known food at the food surface post-predator cue (a proxy for voracity) more quickly than individuals in smaller groups.
+2) We predict that individuals in larger groups will begin sampling a known food at the water surface post-predator cue (a proxy for voracity) more quickly than individuals in smaller groups.
 
 **Michael please report the results from the latency known food model including any model comparison
 **Include marginal effects plot (including hurdle) and posterior estimates in a table
 
-
-(3) I predict that the mean time it takes for all the individuals in the group to begin sampling a novel food (a proxy for boldness toward a novel object) will for larger groups compared to smaller groups. 
+3) We predict that individuals in larger groups will begin sampling a novel food (a proxy for boldness toward a novel object) more quickly than individuals in smaller groups.
 
 **Michael please report the results from the novel food model including any model comparison
 **Include marginal effects plot (including hurdle) and posterior estimates in a table
