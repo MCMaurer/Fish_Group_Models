@@ -258,6 +258,13 @@ mtcars %>%
 # here's a raw way to calculate icc, as per https://discourse.mc-stan.org/t/rstanarm-extracting-variance-components/4409/4?u=michael_c-m
 
 # I also think we should do this for all the icc stuff, including tank in both
+
+
+
+icc_plot(typ_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank))
+
+
+
 PPD <- posterior_predict(typ_int, re.form = ~(1|group_ID) + (1|tank))
 vars <- apply(PPD, MARGIN = 1, FUN = var)
 
@@ -267,6 +274,23 @@ vars_0 <- apply(PPD_0, MARGIN = 1, FUN = var)
 icc_draws <- tibble(icc_draws = 1 - (vars_0/vars))
 
 icc_draws %>% 
+  median_hdi() %>% 
+  rename(median_icc = icc_draws, ci_2.5 = .lower, ci_97.5 = .upper)
+
+icc_draws %>% 
   ggplot(aes(x = icc_draws)) +
   geom_histogram(bins = 80)
-  
+
+PPD <- posterior_predict(model, re.form = total_re.form)
+vars <- apply(PPD, MARGIN = 1, FUN = var)
+
+PPD_0 <- posterior_predict(model, re.form = lesser_re.form)
+vars_0 <- apply(PPD_0, MARGIN = 1, FUN = var)
+
+icc_draws <- tibble(icc_draws = 1 - (vars_0/vars))
+
+icc_draws %>% 
+  median_hdi() %>% 
+  rename(median_icc = icc_draws, ci_2.5 = .lower, ci_97.5 = .upper) %>% 
+  select(median_icc, ci_2.5, ci_97.5) %>% 
+  mutate(model_name = deparse(substitute(model)))

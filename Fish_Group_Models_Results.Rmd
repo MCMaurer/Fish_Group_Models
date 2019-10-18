@@ -12,6 +12,7 @@ library(brms)
 library(tidybayes)
 theme_set(theme_minimal())
 source("figure_generating_functions.R")
+source("icc_functions.R")
 ```
 
 
@@ -188,6 +189,13 @@ lat_nov_int %>%
 
 **Michael report the variance ratio information (value and credible intervals) for all 3 trial types
 **Michael report the variance ration information between the group size treatments for all 3 trial types (and maybe explain in a sentence why its not reliable information so Andy understands why we can’t use it)
+
+
+```{r, cache=F}
+my_icc_plot(lat_typ_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank))
+my_icc_tibble(model = lat_typ_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank)) %>% knitr::kable()
+```
+
 
 **Michael report the model that compares randomly assembled groups with real groups times (this might be only for known food right now)**include plot in bottom, but don't model, sorry!
 
