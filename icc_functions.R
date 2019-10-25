@@ -61,15 +61,15 @@ my_icc_tibble <- function(model, total_re.form, lesser_re.form){
   vars_0 <- apply(PPD_0, MARGIN = 1, FUN = var)
   
   icc_draws <- tibble(icc_draws = 1 - (vars_0/vars))
-  
+  model_name <- deparse(substitute(model))
   icc_draws %>% 
     median_hdi() %>% 
     rename(median_icc = icc_draws, ci_2.5 = .lower, ci_97.5 = .upper) %>% 
-    select(median_icc, ci_2.5, ci_97.5) %>% 
-    mutate(model_name = deparse(substitute(model)))
+    mutate(model_name = model_name) %>% 
+    select(model_name, median_icc, ci_2.5, ci_97.5)
 }
 
-my_icc_plot <- function(model, total_re.form, lesser_re.form){
+my_icc_plot <- function(model, total_re.form, lesser_re.form, plot_each_var = F){
   PPD <- posterior_predict(model, re.form = total_re.form)
   vars <- apply(PPD, MARGIN = 1, FUN = var)
   
@@ -78,9 +78,33 @@ my_icc_plot <- function(model, total_re.form, lesser_re.form){
   
   icc_draws <- tibble(icc_draws = 1 - (vars_0/vars))
   
-  icc_draws %>% 
+  g <- icc_draws %>% 
     ggplot(aes(x = icc_draws)) +
     geom_histogram(bins = 100) +
     ggtitle(deparse(substitute(model)))
+  
+  if (plot_each_var == T) {
+    g2 <- vars %>% 
+      as.data.frame() %>% 
+      ggplot(aes(x = vars)) +
+      geom_histogram(bins = 100) +
+      xlab("Variance Draws Conditional on Random Effects")
+    
+    g3 <- vars_0 %>% 
+      as.data.frame() %>% 
+      ggplot(aes(x = vars_0)) +
+      geom_histogram(bins = 100) +
+      xlab("Variance Draws Not Conditional on Random Effects")
+    
+    # exctracting axis limits from each plot
+    g2x <- ggplot_build(g2)$layout$panel_scales_x[[1]]$range$range
+    g3x <- ggplot_build(g3)$layout$panel_scales_x[[1]]$range$range
+    
+    # making the limits the same while fitting both sets of data
+    g2 <- g2 + xlim(min(g2x, g3x), max(g2x, g3x))
+    g3 <- g3 + xlim(min(g2x, g3x), max(g2x, g3x))
+    
+    g <- list(icc = g, conditional_variance = g2, unconditional_variance = g3)
+  }
+  return(g)
 }
-

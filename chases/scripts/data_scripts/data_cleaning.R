@@ -58,3 +58,20 @@ d$tank <- as.factor(d$tank)
 d$percap_chases <- d$numchases / d$treatment
 
 saveRDS(d, "chases/data/cleaned/only_half_chase_group_size.rds")
+
+
+# now with lea's full chases dataset --------------------------------------
+
+d <- read_csv("chases/data/raw/full_chase_group_size.csv")
+d <- d %>% 
+  select_if(!str_detect(names(.), "^X[0-9]*")) %>% 
+  select(-Date, -`Video Folder`, -`Video #`) %>% 
+  rename(trial = Trial, tank = Tank, group_ID = Group) %>% 
+  rowid_to_column() %>% 
+  gather(key = "assay_type", value = "value", -trial, -tank, -group_ID, -rowid) %>%
+  separate(col = assay_type, into = c("assay", "measurement"), sep = "_") %>% 
+  select(-rowid) %>% 
+  mutate(treatment = as.numeric(str_sub(group_ID, 1, 1))) %>% 
+  select(treatment, trial, group_ID, assay, measurement, value)
+
+saveRDS(d, "chases/data/cleaned/full_chase_group_size.rds")

@@ -4,6 +4,7 @@ library(tidyverse)
 library(sjstats)
 library(brms)
 library(ggridges)
+library(tidybayes)
 #library(performance)
 
 theme_set(MCMsBasics::minimal_ggplot_theme())
@@ -221,7 +222,7 @@ groups_treatments <- typ_int$data %>%
   mutate(group_ID = factor(group_ID))
 
 typ_int %>% 
-  spread_draws(b_Intercept, r_group_ID[group_ID,Intercept], ) %>% 
+  spread_draws(b_Intercept, r_group_ID[group_ID,Intercept]) %>% 
   mutate(group_ID_intercept = b_Intercept + r_group_ID) %>%
   left_join(groups_treatments) %>% 
   ggplot(aes(y = reorder(group_ID, group_ID_intercept), x = group_ID_intercept)) +
@@ -289,8 +290,17 @@ vars_0 <- apply(PPD_0, MARGIN = 1, FUN = var)
 
 icc_draws <- tibble(icc_draws = 1 - (vars_0/vars))
 
+model = typ_int
+
 icc_draws %>% 
   median_hdi() %>% 
   rename(median_icc = icc_draws, ci_2.5 = .lower, ci_97.5 = .upper) %>% 
   select(median_icc, ci_2.5, ci_97.5) %>% 
   mutate(model_name = deparse(substitute(model)))
+
+
+test <- function(name){
+  deparse(substitute(name))
+}
+
+test(name = henry)

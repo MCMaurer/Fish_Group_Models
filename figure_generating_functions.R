@@ -157,9 +157,57 @@ param_estimate_plot <- function(model, num_params = 4){
 }
 
 
+# model description tables ------------------------------------------------
 
+make_model_table <- function(...){
+  all_model_names <- lapply(substitute(list(...))[-1], deparse)
+  models <- list(...)
+  names(models) <- all_model_names
+  
+  model_table <- tibble(
+    model_name = character(),
+    distribution = character(),
+    formula = character(),
+    random_effects = character(),
+    response = character(),
+    predictors = character()
+  )
+  for (i in 1:length(models)) {
+    model <- models[[i]]
+    model_name <- names(models)[i]
+    distribution <- model$family$family
+    formula <- as.character(model$formula$formula)
+    formula <- paste(formula[2], formula[1], formula[3])
+    if (length(model$formula$pforms) > 0) {
+      formula2 <- as.character(model$formula$pforms[[1]])
+      formula2 <- paste(formula2[2], formula2[1], formula2[3])
+      formula <- paste(formula, formula2, sep = "\n")
+    }
+    random_effects <- paste(as.character(insight::find_formula(model)$random), sep = "\n", collapse = "\n")
+    response <- insight::find_response(model)
+    predictors <- paste(as.character(unlist(insight::find_predictors(model))), sep = "\n", collapse = "\n")
+    
+    new_model_table <- tibble(
+      model_name = model_name,
+      distribution = distribution,
+      formula = formula,
+      random_effects = random_effects,
+      response = response,
+      predictors = predictors)
+    
+    model_table <- rbind(model_table, new_model_table)
+    
+  }
+  model_table <- model_table %>% 
+    mutate_if(.predicate = str_detect(., "\n"), .funs = linebreak)
+  return(model_table)
+}
 
-
+# 
+# make_model_table(lat_pred_int, lat_typ_int, lat_nov_int, food_eaten)
+# 
+# make_model_table(lat_pred_int, lat_typ_int, lat_nov_int)
+# make_model_table(lat_pred_int)
 
 
 

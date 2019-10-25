@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = F)
 library(tidyverse)
 library(brms)
 library(tidybayes)
+library(kableExtra)
 theme_set(theme_minimal())
 source("figure_generating_functions.R")
 source("icc_functions.R")
@@ -40,6 +41,8 @@ Video scoring and analysis: Behaviors were be scored using Jwatcher software (Bl
 	*Michael, tell the good people what else we did!
 	
 To analyze the effects of group size and trial on behavioral assay outcomes, we used Bayesian generalized linear multilevel models, fitted with the R package brms (REF brms), which is an interface to the MCMC sampler Stan (REF Stan). Detailed descriptions of each model will be given below. All models included group effects for fish group ID, to account for any consistent differences between groups, and tank ID, to account for potential differences in outcomes across assay tanks. Using a multilevel structure for fish group ID also allowed us to calculate the intra-class correlation coefficient (ICC) for each model. The ICC is a statistic that describes the proportion of the total variance explained by group-level effects in a multilevel model and has frequently been used to show individual behavioral repeatability or group cohesion (Nakagawa 2017). For frequentist methods, the decomposition of variance into group-level and global effects involves algebraic approximations of variance, but within a Bayesian framework, the proportion of variance explained by grouping can be calculated by taking draws from the posterior distribution. Posterior predictions conditioned on the group-level effects are compared to posterior predictions not conditioned on group-level effects, and the ratios of the variances is calculated, yielding a value ranging from 0 to 1, with 0 indicating that grouping conveys no information, and 1 indicating that all observations within groups are identical, the same as ICC values. Unlike a frequentist variance decomposition method, this Bayesian method also allows for credible intervals for the variance ratio to be calculated, giving a more complete description than a simple point estimate.
+
+* Michael's Note: I would like to maybe describe this a little further or even create a supplementary material .R script to demonstrate what's going on. Basically the `predict()` function takes draws from the posterior taking into consideration 1) the residual (observation-level) variance, 2) the uncertainty in the fixed coefficients and 3) the uncertainty in the variance parameters for the grouping factors. We can then tweak the third thing by getting rid of group_ID grouping variance parameters, and we should see our predicted draws variance shrink by not including this source of uncertainty, **IF** this source of uncertainty is significant. If it's not, then the variance of the predicted draws shouldn't change much
 
 	*I think we will need a sentence or two describing the variance ratio and how it is equivalent to ICC- a citation or two will help with that if you have it
 	
@@ -111,6 +114,27 @@ food_eaten <- read_rds("food_eaten/fit_models/prop_typ_eaten_aggress_1_aggbinom_
 
 **Do we want to describe each model with formulas or do we want to describe them verbally?**
 
+```{r, model_description_table}
+
+# model_table <- make_model_table(lat_pred_int, lat_typ_int, lat_nov_int, food_eaten)
+# model_table %>% 
+#   select(-formula) %>% 
+#   kable(align = "c")
+
+```
+### Models to be Fit
+
+1. XXX lat_typ plus 4 chase predictors 
+2. lat_nov plus 4 chase predictors
+3. lat_pred plus 4 chase predictors
+4. correlations between mean group latencies across assays
+5. group_lat_typ_variance with treatment and trial as predictors
+6. group_lat_nov_variance with treatment and trial as predictors
+7. group_lat_pred_variance with treatment and trial as predictors
+8. first_second difference with treatment and trial as predictors
+9. last_two difference with treatment and trial as predictors
+
+
 # Results
 
 ## Question 1: How do differences in social group size influence collective behaviors, such as anti-predator behaviors, foraging behavior, or boldness in the face of novel objects? 
@@ -119,6 +143,7 @@ food_eaten <- read_rds("food_eaten/fit_models/prop_typ_eaten_aggress_1_aggbinom_
 
 **Michael please report the results from the latency predator model (for some reason couldn’t find it on your git hub), including any model comparison
 **Include marginal effects plot and posterior estimates in a table 
+
 ```{r, lat_pred marginal effects, cache=T}
 marginal_effects_plot(model = lat_pred_int, effects = c("treatment", "trial"))
 marginal_effects_plot(model = lat_pred_int, effects = c("treatment", "trial"), dpar = "hu")
@@ -191,9 +216,19 @@ lat_nov_int %>%
 **Michael report the variance ration information between the group size treatments for all 3 trial types (and maybe explain in a sentence why its not reliable information so Andy understands why we can’t use it)
 
 
-```{r, cache=F}
-my_icc_plot(lat_typ_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank))
-my_icc_tibble(model = lat_typ_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank)) %>% knitr::kable()
+```{r, cache=T}
+my_icc_plot(lat_pred_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank))
+my_icc_tibble(lat_pred_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank)) %>% knitr::kable()
+```
+
+```{r, cache=T}
+my_icc_plot(lat_typ_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank), plot_each_var = T)
+my_icc_tibble(lat_typ_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank)) %>% knitr::kable()
+```
+
+```{r, cache=T}
+my_icc_plot(lat_nov_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank))
+my_icc_tibble(lat_nov_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank)) %>% knitr::kable()
 ```
 
 
@@ -219,8 +254,29 @@ my_icc_tibble(model = lat_typ_int, total_re.form = ~(1|group_ID) + (1|tank), les
 
 ## Question 4: Proportion of food eaten - are groups repeatable in the amount of food eaten? Are there differences between group sizes in the amount of food eaten?
 
+```{r, food_eaten marginal effects, cache=T}
+marginal_effects_plot(model = food_eaten, effects = c("treatment", "trial"))
+```
+
+```{r, food_eaten coefficient table, cache=T}
+food_eaten %>% 
+  gather_draws(`^b.*`, regex = T) %>% 
+  median_hdi() %>% 
+  select(.variable, .value, .lower, .upper) %>% 
+  rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  mutate(overlap_zero = hdi_2.5 < 0 & hdi_97.5 > 0) %>%
+  knitr::kable()
+```
+
+```{r, cache=T}
+my_icc_plot(food_eaten, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank), plot_each_var=T)
+my_icc_tibble(food_eaten, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.form = ~(1|tank)) %>% knitr::kable()
+```
+
 ***Michael – output from aggregated binomial models and then calculate ICC for these groups as well
 
 ***Did we ever look at whether proportion eaten (known food) correlated with mean latency to eat (known food) in that same trial? I.e., “do faster fish groups eat more”)
 	
 **did this, put results here**
+
+Essentially, there's no correlation between the two if you also account for treatment and trial, but if you exclude them there is a correlation. This suggests that they are both driven by treatment in trial, but are not linked to each other otherwise. Bigger groups eat more food and bigger groups approach food more quickly, but latency doesn't affect food eaten and vice versa.
