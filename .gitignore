@@ -5,6 +5,10 @@
 .git/objects/13/cf90592ae748c08d37910fe016d7d0abd34cdb
 Fish_Group_Models_Results.html
 Fish_Group_Models_Results_cache/
+Fish_Group_Models_Results_cache/html/unnamed-chunk-10_38daf7d0fa4c28ee87d1b5a8dada1b59.rdb
+Fish_Group_Models_Results_cache/html/unnamed-chunk-11_31900d855d09893b5ed772267377a5e6.rdb
+Fish_Group_Models_Results_cache/html/unnamed-chunk-13_3fdb925127d0dd8f3d4e4f91217b82fb.rdb
+Fish_Group_Models_Results_cache/html/unnamed-chunk-6_7b0479dc61441316e6aa29f394e6ec1b.rdb
 Fish_Group_Models_Results_files/
 fit_models/.git/objects/13/cf90592ae748c08d37910fe016d7d0abd34cdb
 food_eaten/fit_models/
@@ -19,3 +23,6 @@ manuscript_and_talk_figs_results/abs_2019/*.tiff
 old_stuff/fit_models/
 old_stuff/fit_models/fit_multivariate_group_size_novel_nbin_farm.rds
 other_models/fit_models/
+other_models/fit_models/mean_group_lat_all_assays_fitted.rds
+other_models/fit_models/mean_group_lat_all_assays_tt_fitted.rds
+other_models/data/cleaned/

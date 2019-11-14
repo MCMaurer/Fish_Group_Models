@@ -2,6 +2,8 @@
 sess <- sessionInfo()
 on_farm <- stringr::str_detect(sess$running, "Ubuntu")
 
+getwd()
+
 # if running on Ubuntu (on the FARM), then change lib paths and load brms from a specific location, otherwise just load brms
 if (on_farm) {
   .libPaths(.libPaths()[2:3])
@@ -30,6 +32,7 @@ if(on_farm){
 
 # save model
 saveRDS(model, "other_models/fit_models/known_lat_all_chases.rds")
+
 model %>% 
   gather_draws(`^b.*`, regex = T) %>% 
   median_hdi() %>% 
@@ -44,3 +47,48 @@ model %>%
   geom_vline(xintercept = 0) +
   MCMsBasics::minimal_ggplot_theme() +
   coord_cartesian(xlim = c(-1,1))
+
+
+# novel lat all chases ----------------------------------------------------
+
+
+d <- readRDS("other_models/data/cleaned/novel_lat_all_chases_data.rds")
+
+# fit hurdle-inflated negbinom
+ model <- brm(data = d, family = hurdle_negbinomial,
+              bf(latency ~ 1 + treatment + trial + activity + food + novel + pred +
+                   (1 | group_ID) +
+                   (1 | tank),
+                 hu ~ 1 + treatment + trial + activity + food + novel + pred +
+                   (1 | group_ID) +
+                   (1 | tank)),
+               prior = c(set_prior("normal(1, 1)", class = "Intercept"),
+                         set_prior("normal(0, 1)", class = "b"),
+                         set_prior("cauchy(0, 2)", class = "sd")),
+               iter = 5000, warmup = 2000, chains = 3, cores = 3, 
+               control = list(adapt_delta = 0.99, max_treedepth = 15))
+
+# save model
+saveRDS(model, "other_models/fit_models/novel_lat_all_chases.rds")
+
+# predator latency all chases ---------------------------------------------
+
+
+d <- readRDS("other_models/data/cleaned/pred_lat_all_chases_data.rds")
+
+# fit hurdle-inflated negbinom
+ model <- brm(data = d, family = hurdle_negbinomial,
+              bf(latency ~ 1 + treatment + trial + activity + food + pred + pred +
+                   (1 | group_ID) +
+                   (1 | tank),
+                 hu ~ 1 + treatment + trial + activity + food + pred + pred +
+                   (1 | group_ID) +
+                   (1 | tank)),
+               prior = c(set_prior("normal(1, 1)", class = "Intercept"),
+                         set_prior("normal(0, 1)", class = "b"),
+                         set_prior("cauchy(0, 2)", class = "sd")),
+               iter = 5000, warmup = 2000, chains = 3, cores = 3, 
+               control = list(adapt_delta = 0.99, max_treedepth = 15))
+
+# save model
+saveRDS(model, "other_models/fit_models/pred_lat_all_chases.rds")

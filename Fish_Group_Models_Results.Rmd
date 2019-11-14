@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r, setup, include=F}
-knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(echo = F, cache = T)
 library(tidyverse)
 library(brms)
 library(tidybayes)
@@ -38,14 +38,10 @@ Known food assay: Groups were recorded for 5 minutes immediately following the i
 Novel food assay: Groups were recorded for 5 minutes immediately following the introduction of a novel food though airline tubing. The novel food was varied for each trial, but introduced in the same sequence for each group to control for the effect of order of introduction across groups. The novel foods introduced were brine shrimp (frozen and then defrosted, highly palatable), glass beads (similar in color and size to the brine shrimp, not palatable), and biofouled microplastics (polyethylene particles kept in water from Putah Creek [Davis, CA] for 1 month to accumulate natural biofilm growth). Boldness toward a novel food was measured as the latency to sample the novel item for each individual. At the conclusion of the last assay, individuals were weighed, measured, and euthanized in an overdose of buffered ms-222 solution and frozen. 
 Video scoring and analysis: Behaviors were be scored using Jwatcher software (Blumstein & Daniel 2007). 
 	
-	*Michael, tell the good people what else we did!
-	
 To analyze the effects of group size and trial on behavioral assay outcomes, we used Bayesian generalized linear multilevel models, fitted with the R package brms (REF brms), which is an interface to the MCMC sampler Stan (REF Stan). Detailed descriptions of each model will be given below. All models included group effects for fish group ID, to account for any consistent differences between groups, and tank ID, to account for potential differences in outcomes across assay tanks. Using a multilevel structure for fish group ID also allowed us to calculate the intra-class correlation coefficient (ICC) for each model. The ICC is a statistic that describes the proportion of the total variance explained by group-level effects in a multilevel model and has frequently been used to show individual behavioral repeatability or group cohesion (Nakagawa 2017). For frequentist methods, the decomposition of variance into group-level and global effects involves algebraic approximations of variance, but within a Bayesian framework, the proportion of variance explained by grouping can be calculated by taking draws from the posterior distribution. Posterior predictions conditioned on the group-level effects are compared to posterior predictions not conditioned on group-level effects, and the ratios of the variances is calculated, yielding a value ranging from 0 to 1, with 0 indicating that grouping conveys no information, and 1 indicating that all observations within groups are identical, the same as ICC values. Unlike a frequentist variance decomposition method, this Bayesian method also allows for credible intervals for the variance ratio to be calculated, giving a more complete description than a simple point estimate.
 
 * Michael's Note: I would like to maybe describe this a little further or even create a supplementary material .R script to demonstrate what's going on. Basically the `predict()` function takes draws from the posterior taking into consideration 1) the residual (observation-level) variance, 2) the uncertainty in the fixed coefficients and 3) the uncertainty in the variance parameters for the grouping factors. We can then tweak the third thing by getting rid of group_ID grouping variance parameters, and we should see our predicted draws variance shrink by not including this source of uncertainty, **IF** this source of uncertainty is significant. If it's not, then the variance of the predicted draws shouldn't change much
 
-	*I think we will need a sentence or two describing the variance ratio and how it is equivalent to ICC- a citation or two will help with that if you have it
-	
 ## List of Models/Analyses
 
 1) latency post predator
@@ -105,7 +101,7 @@ lat_nov_int$family
 
 9) food eaten models
 ```{r}
-food_eaten <- read_rds("food_eaten/fit_models/prop_typ_eaten_aggress_1_aggbinom_fit.rds")
+food_eaten <- read_rds("food_eaten/fit_models/prop_typ_eaten_aggress_1_aggbinom_int_fit.rds")
 ```
 
 10) correlation between latency and food_eaten in same trial
@@ -124,15 +120,28 @@ food_eaten <- read_rds("food_eaten/fit_models/prop_typ_eaten_aggress_1_aggbinom_
 ```
 ### Models to be Fit
 
-1. XXX lat_typ plus 4 chase predictors 
+1. XXX lat_typ plus 4 chase predictors
+    - known_lat_all_chases
 2. lat_nov plus 4 chase predictors
 3. lat_pred plus 4 chase predictors
 4. correlations between mean group latencies across assays
+    - mean_group_lat_nov ~ mean_group_lat_known + mean_group_lat_pred + treatment + trial + (1|tank) + (1|group_ID)
+    - mean_group_lat_all_assays_tt_fitted
+
 5. group_lat_typ_variance with treatment and trial as predictors
+    - group_lat_typ_var ~ treatment + trial + (1|tank) + (1|group_ID)
+    - known_lat_var
+
 6. group_lat_nov_variance with treatment and trial as predictors
+
 7. group_lat_pred_variance with treatment and trial as predictors
 8. first_second difference with treatment and trial as predictors
 9. last_two difference with treatment and trial as predictors
+    - all of these done for all assays
+10. food_eaten as varying intercept only
+    - prop_typ_eaten_aggbinom_fit
+    
+* would it be worth doing something like creating a hypothetical hurdle negative binomial distribution of fish latency values (maybe even from real data), and then just randomly assemble groups of 2, 4, or 8, and then look at fastest vs. slowest? Perhaps this would show what a purely sampling bias effect would look like
 
 
 # Results
@@ -140,9 +149,6 @@ food_eaten <- read_rds("food_eaten/fit_models/prop_typ_eaten_aggress_1_aggbinom_
 ## Question 1: How do differences in social group size influence collective behaviors, such as anti-predator behaviors, foraging behavior, or boldness in the face of novel objects? 
 
 ### 1) We predict that individuals in large groups will begin normal, unstressed movements post-predator cue (a proxy for boldness in the presence of a predator) more quickly than individuals in smaller groups.
-
-**Michael please report the results from the latency predator model (for some reason couldn’t find it on your git hub), including any model comparison
-**Include marginal effects plot and posterior estimates in a table 
 
 ```{r, lat_pred marginal effects, cache=T}
 marginal_effects_plot(model = lat_pred_int, effects = c("treatment", "trial"))
@@ -162,9 +168,6 @@ lat_pred_int %>%
 
 ### 2) We predict that individuals in larger groups will begin sampling a known food at the water surface post-predator cue (a proxy for voracity) more quickly than individuals in smaller groups.
 
-**Michael please report the results from the latency known food model including any model comparison
-**Include marginal effects plot (including hurdle) and posterior estimates in a table
-
 ```{r, lat_typ_int, cache=T}
 marginal_effects_plot(model = lat_typ_int, effects = c("treatment", "trial"))
 marginal_effects_plot(model = lat_typ_int, effects = c("treatment", "trial"), dpar = "hu")
@@ -181,9 +184,6 @@ lat_typ_int %>%
 ```
 
 ### 3) We predict that individuals in larger groups will begin sampling a novel food (a proxy for boldness toward a novel object) more quickly than individuals in smaller groups.
-
-**Michael please report the results from the novel food model including any model comparison
-**Include marginal effects plot (including hurdle) and posterior estimates in a table
 
 ```{r, lat_nov_int, cache=T}
 marginal_effects_plot(model = lat_nov_int, effects = c("treatment", "trial"))
@@ -202,13 +202,77 @@ lat_nov_int %>%
 
 ### (4) Furthermore, I predict that the time it takes for the first individual, and the time difference between the first and second individual, to begin unstressed movement, (6) sample known food, and (7) sample novel food will be positively correlated with group size.
 
-**Michael please report what you do have in terms of the models that explored the time difference between the first and the second individual I think you might have only done this for the known food though, right? Just put that plot and any test of significance you did between the randomized and real data.
+```{r}
+known_first2_diff <- read_rds("other_models/fit_models/known_first2_diff_fitted.rds")
+known_last2_diff <- read_rds("other_models/fit_models/known_last2_diff_fitted.rds")
 
-*I could run an explicit model of this as well?*
+novel_first2_diff <- read_rds("other_models/fit_models/novel_first2_diff_fitted.rds")
+novel_last2_diff <- read_rds("other_models/fit_models/novel_last2_diff_fitted.rds")
 
-**Do explicit model of this, so a within-group measure of time between 1st and 2nd is the response variable**
+pred_first2_diff <- read_rds("other_models/fit_models/pred_first2_diff_fitted.rds")
+pred_last2_diff <- read_rds("other_models/fit_models/pred_last2_diff_fitted.rds")
+```
 
-**Michael, it would also be good here to report the model that looked at the time difference between the last two individuals, since this was a good comment on sampling bias, right? I think you might have only done this for the known food though, right? Just put that plot and any test of significance you did between the randomized and real data.
+Known food latency differences, first 2, then last 2.
+```{r, known_lat_diffs}
+marginal_effects_plot(model = known_first2_diff, effects = c("treatment", "trial"))
+marginal_effects_plot(model = known_last2_diff, effects = c("treatment", "trial"))
+
+known_first2_diff$data %>% 
+  ggplot(aes(x = as.factor(treatment), y = diff)) +
+  geom_violin(fill = NA) +
+  geom_jitter(aes(color = as.factor(trial)), alpha = 0.6) +
+  scale_color_viridis_d("trial") +
+  xlab("treatment") + ylab("Difference Between 1st and 2nd Individuals")
+
+known_last2_diff$data %>% 
+  ggplot(aes(x = as.factor(treatment), y = diff)) +
+  geom_violin(fill = NA) +
+  geom_jitter(aes(color = as.factor(trial)), alpha = 0.6) +
+  scale_color_viridis_d("trial") +
+  xlab("treatment") + ylab("Difference Between Last and 2nd Last Individuals")
+```
+
+Novel food latency differences, first 2, then last 2.
+```{r, novel_lat_diffs}
+marginal_effects_plot(model = novel_first2_diff, effects = c("treatment", "trial"))
+marginal_effects_plot(model = novel_last2_diff, effects = c("treatment", "trial"))
+
+novel_first2_diff$data %>% 
+  ggplot(aes(x = as.factor(treatment), y = diff)) +
+  geom_violin(fill = NA) +
+  geom_jitter(aes(color = as.factor(trial)), alpha = 0.6) +
+  scale_color_viridis_d("trial") +
+  xlab("treatment") + ylab("Difference Between 1st and 2nd Individuals")
+
+novel_last2_diff$data %>% 
+  ggplot(aes(x = as.factor(treatment), y = diff)) +
+  geom_violin(fill = NA) +
+  geom_jitter(aes(color = as.factor(trial)), alpha = 0.6) +
+  scale_color_viridis_d("trial") +
+  xlab("treatment") + ylab("Difference Between Last and 2nd Last Individuals")
+```
+
+Predation latency differences, first 2, then last 2
+```{r, pred_lat_diffs}
+marginal_effects_plot(model = pred_first2_diff, effects = c("treatment", "trial"))
+marginal_effects_plot(model = pred_last2_diff, effects = c("treatment", "trial"))
+
+pred_first2_diff$data %>% 
+  ggplot(aes(x = as.factor(treatment), y = diff)) +
+  geom_violin(fill = NA) +
+  geom_jitter(aes(color = as.factor(trial)), alpha = 0.6) +
+  scale_color_viridis_d("trial") +
+  xlab("treatment") + ylab("Difference Between 1st and 2nd Individuals")
+
+pred_last2_diff$data %>% 
+  ggplot(aes(x = as.factor(treatment), y = diff)) +
+  geom_violin(fill = NA) +
+  geom_jitter(aes(color = as.factor(trial)), alpha = 0.6) +
+  scale_color_viridis_d("trial") +
+  xlab("treatment") + ylab("Difference Between Last and 2nd Last Individuals")
+```
+
 
 ## Question 2: What is the role of group ID versus group size? In other words, how much do your group-mates influence your behavior? Does group size influence levels of collective behavior repeatability? 
 
@@ -240,6 +304,55 @@ my_icc_tibble(lat_nov_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.f
 
 *have not done this yet but could whip something up!*
 
+These models look at how group variance is affected by group size and trial, for the known food, novel food, and predation assays. The predictors for treatment and trial are centered for these models, in order to aid model fitting.
+
+```{r}
+known_var <- read_rds("other_models/fit_models/known_lat_var_fitted.rds")
+novel_var <- read_rds("other_models/fit_models/novel_lat_var_fitted.rds")
+pred_var <- read_rds("other_models/fit_models/pred_lat_var_fitted.rds")
+```
+
+```{r, known_var marginal effects, cache=T}
+marginal_effects_plot(model = known_var, effects = c("treatment_c", "trial_c"))
+```
+
+```{r, known_var coefficient table, cache=T}
+known_var %>% 
+  gather_draws(`^b.*`, shape, regex = T) %>% 
+  median_hdi() %>% 
+  select(.variable, .value, .lower, .upper) %>% 
+  rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  mutate(overlap_zero = hdi_2.5 < 0 & hdi_97.5 > 0) %>%
+  knitr::kable()
+```
+
+```{r, novel_var marginal effects, cache=T}
+marginal_effects_plot(model = novel_var, effects = c("treatment_c", "trial_c"))
+```
+
+```{r, novel_var coefficient table, cache=T}
+novel_var %>% 
+  gather_draws(`^b.*`, shape, regex = T) %>% 
+  median_hdi() %>% 
+  select(.variable, .value, .lower, .upper) %>% 
+  rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  mutate(overlap_zero = hdi_2.5 < 0 & hdi_97.5 > 0) %>%
+  knitr::kable()
+```
+
+```{r, pred_var marginal effects, cache=T}
+marginal_effects_plot(model = pred_var, effects = c("treatment_c", "trial_c"))
+```
+
+```{r, pred_var coefficient table, cache=T}
+pred_var %>% 
+  gather_draws(`^b.*`, shape, regex = T) %>% 
+  median_hdi() %>% 
+  select(.variable, .value, .lower, .upper) %>% 
+  rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  mutate(overlap_zero = hdi_2.5 < 0 & hdi_97.5 > 0) %>%
+  knitr::kable()
+```
 
 
 ## Question 3: Are certain collective behaviors correlated in groups (i.e., is there a group syndrome)?
@@ -251,6 +364,19 @@ my_icc_tibble(lat_nov_int, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.f
 
 *have not done either of these cross-assay correlations, but could do this!*
 
+```{r}
+mean_lat_all_assays <- read_rds("other_models/fit_models/mean_group_lat_all_assays_tt_fitted.rds")
+```
+
+```{r, mean_lat_all_assays coefficient table, cache=T}
+mean_lat_all_assays %>% 
+  gather_draws(`^b.*`, shape, regex = T) %>% 
+  median_hdi() %>% 
+  select(.variable, .value, .lower, .upper) %>% 
+  rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  mutate(overlap_zero = hdi_2.5 < 0 & hdi_97.5 > 0) %>%
+  knitr::kable()
+```
 
 ## Question 4: Proportion of food eaten - are groups repeatable in the amount of food eaten? Are there differences between group sizes in the amount of food eaten?
 
@@ -277,6 +403,31 @@ my_icc_tibble(food_eaten, total_re.form = ~(1|group_ID) + (1|tank), lesser_re.fo
 
 ***Did we ever look at whether proportion eaten (known food) correlated with mean latency to eat (known food) in that same trial? I.e., “do faster fish groups eat more”)
 	
-**did this, put results here**
+### Latency with proportion of food eaten as a predictor
+
+```{r}
+lat_food_known <- read_rds("other_models/fit_models/lat_food_known.rds")
+lat_food_novel <- read_rds("other_models/fit_models/lat_food_novel.rds")
+```
+
+```{r, lat_food_known coefficient table, cache=T}
+lat_food_known %>% 
+  gather_draws(`^b.*`, shape, regex = T) %>% 
+  median_hdi() %>% 
+  select(.variable, .value, .lower, .upper) %>% 
+  rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  mutate(overlap_zero = hdi_2.5 < 0 & hdi_97.5 > 0) %>%
+  knitr::kable()
+```
+
+```{r, lat_food_novel coefficient table, cache=T}
+lat_food_novel %>% 
+  gather_draws(`^b.*`, shape, regex = T) %>% 
+  median_hdi() %>% 
+  select(.variable, .value, .lower, .upper) %>% 
+  rename(variable = .variable, median = .value, hdi_2.5 = .lower, hdi_97.5 = .upper) %>% 
+  mutate(overlap_zero = hdi_2.5 < 0 & hdi_97.5 > 0) %>%
+  knitr::kable()
+```
 
 Essentially, there's no correlation between the two if you also account for treatment and trial, but if you exclude them there is a correlation. This suggests that they are both driven by treatment in trial, but are not linked to each other otherwise. Bigger groups eat more food and bigger groups approach food more quickly, but latency doesn't affect food eaten and vice versa.
